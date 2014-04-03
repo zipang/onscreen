@@ -1,7 +1,9 @@
 $.onScreen (jQuery Plugin)
 ==========================
 
-> Display things on screen..
+> _Isn't life a series of images that change as they repeat themselves?_  
+Andy Warhol
+
 
 ## Purpose
 
