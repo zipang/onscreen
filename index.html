@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset='utf-8'>
+
+	<link rel="stylesheet" type="text/css" href="css/demo.css" >
+	<title>jQuery onScreen plugin by zipang</title>
+</head>
+
+<body>
+<header>
+    <div class="container">
+        <h1>jQuery onScreen</h1>
+
+        <h2>Stretch your images on the background.</h2>
+
+        <section id="downloads">
+            <a href="https://github.com/zipang/onscreen/zipball/master" class="btn">Download as .zip</a>
+            <a href="https://github.com/zipang/onscreen/tarball/master" class="btn">Download as .tar.gz</a>
+            <a href="https://github.com/zipang/onscreen" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+    </div>
+</header>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script href="js/jquery.onscreen.js"></script>
+<script href="js/jquery.onscreen.vimeo.js"></script>
+<script href="js/jquery.onscreen.youtube.js"></script>
+<script href="js/jquery.onscreen.slideshow.js"></script>
+<script>
+    // Load some slides
+    var n = 10, slides = Array(n), 
+        format = function(i) {
+            return (100 + i).toString().substr(1);
+        }
+
+    while (n) slides[n] = "slides-" + format(n) + ".jpg";
+
+</script>
+
+</body>
+</html>
