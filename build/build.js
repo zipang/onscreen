@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 var buildify = require('buildify'),
-    version = "0.9";
+    version = "0.91";
 
 buildify("../js/")
   .load('jquery.onscreen.js')
-  .concat(['jquery.onscreen.vimeo.js'])
+  .concat(['jquery.onscreen.youtube.js', 'jquery.onscreen.vimeo.js'])
   .wrap('../build/template.js', { version: version, date: new Date })
   .changeDir('../dist/')
   .save('jquery.onscreen-' + version + '.js')
