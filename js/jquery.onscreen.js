@@ -1,4 +1,4 @@
-/**
+ /**
  * jQuery onScreen
 
  * @author zipang
@@ -97,23 +97,24 @@
 		centeredX: true,         // Should we center the image on the X axis?
 		centeredY: true,         // Should we center the image on the Y axis?
 		speed: 1000,             // transition speed after image load (e.g. "fast" or 500)
-		transition: $.support.transition ? cssTransition : jsTransition
+		useCSSTransitions: true,
+		transition: "fade"
 	};
 
 
 	/**
 	 * The only public method to call to project an image or a movie
 	 * @param {Object} call, can contain following attributes :
-	   - source URL of media to load and display
-	   - type Type of media ("image"|"video"). default : "image"
-	   - transition Name of transition to use. default : "fade"
-	   - stretchMode How to stretch the media on screen ("adapt"|"fit"|"crop"). default "crop" (cover all the screen)
-	   - centeredX
-	   - centeredY
-	   - content HTML content to display on top of image
-	   - contentOpacity
-	   - callback function to call when slide has been loaded and streched
-	   @return a promise resolved when the slide has been loaded
+		- source URL of media to load and display
+		- type Type of media ("image"|"video"). default : "image"
+		- transition Name of transition to use. default : "fade"
+		- stretchMode How to stretch the media on screen ("adapt"|"fit"|"crop"). default "crop" (cover all the screen)
+		- centeredX
+		- centeredY
+		- content HTML content to display on top of image
+		- contentOpacity
+		- callback function to call when slide has been loaded and streched
+		@return a promise resolved when the slide has been loaded
 	 */
 	$.onScreen = function(/* arg */) {
 
@@ -134,6 +135,7 @@
 			$screen = new Screen(arg.id, arg.zindex);
 			// Adjust the background size when the global is resized or orientation has changed (iOS)
 			$(global).on("resize", adjustImage);
+
 		} else {
 			$screen.show(); // !IMPORTANT. An invisible screen container prevents .width() and .height() method to return results when loading images
 		}
@@ -145,6 +147,11 @@
 			if (arg.hasOwnProperty(key)) settings[key] = arg[key];
 		}
 		$screen.data("settings", settings);
+
+		if (settings.transition === "fade") { // default fade transition
+			settings.transition = (settings.useCSSTransitions && $.support.transition) ?
+				cssTransition : jsTransition;
+		}
 
 
 		// Prepare to delete any old images
@@ -302,3 +309,4 @@
 
 
 })(window.jQuery || window.Zepto, this);
+
