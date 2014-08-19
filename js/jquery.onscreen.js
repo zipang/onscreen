@@ -53,8 +53,8 @@
 		}
 	}
 
-	if (!global.requestAnimationFrame) { // a dummy shim for our sole purpose
-		global.requestAnimationFrame = function(fn) {
+	if (!w.requestAnimationFrame) { // a dummy shim for our sole purpose
+		w.requestAnimationFrame = function(fn) {
 			setTimeout(fn, 10);
 		}
 	}
