@@ -10,25 +10,33 @@
  * using CSS3 or JS
  *
  */
-;(function($, global, undefined) {
+;(function($, w, undefined) {
 
-	var $viewport = $(global),
+	var $viewport = $(w),
 		$screen, $EMPTY_SLIDE = $();
 
 	// Initialize
 	function Screen(id, zindex) {
-		return $("<div>")
-			.attr("id", id || "screen")
-			.css({
-				position: "fixed",
-				left: 0, top: 0,
-				margin: 0, padding: 0,
-				overflow: "hidden",
-				zIndex: zindex || -999999,
-				height: "100%", width: "100%"
-			})
-			.prependTo("body");
+
+		var screenId = (id  || "screen").replace("#", ""),
+			$screen = $("#" + screenId);
+
+		if ($screen.length === 0) {
+			$screen = $("<div>")
+				.attr("id", screenId)
+				.css({
+					position: "fixed",
+					left: 0, top: 0,
+					margin: 0, padding: 0,
+					overflow: "hidden",
+					zIndex: zindex || -999999,
+					height: "100%", width: "100%"
+				})
+				.prependTo("body");
+		}
+		return $screen;
 	}
+
 
 	function Slide($bg, content, type) {
 
@@ -132,9 +140,9 @@
 		}
 
 		if (!$screen) { // first call
-			$screen = new Screen(arg.id, arg.zindex);
-			// Adjust the background size when the global is resized or orientation has changed (iOS)
-			$(global).on("resize", adjustImage);
+			$screen = new Screen(arg.screen, arg.zindex);
+			// Adjust the background size when the w is resized or orientation has changed (iOS)
+			$viewport.on("resize", adjustImage);
 
 		} else {
 			$screen.show(); // !IMPORTANT. An invisible screen container prevents .width() and .height() method to return results when loading images

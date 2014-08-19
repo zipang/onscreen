@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 var buildify = require('buildify'),
-    version = "0.92";
+    version = "0.93";
 
 buildify("../js/")
   .load('jquery.onscreen.js')
