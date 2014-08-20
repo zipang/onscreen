@@ -19,7 +19,7 @@
 	 * Detect a VIMEO URL
 	 */
 	function detectYoutubeSource(src) {
-		return (src && /[youtube|youtu\.be]/gi.test(src));
+		return (src && /youtu/gi.test(src));
 	}
 
 	function extractVideoId(youtubeShareUrl) {
