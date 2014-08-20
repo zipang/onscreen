@@ -112,15 +112,15 @@
 
 	/**
 	 * The only public method to call to project an image or a movie
-	 * @param {Object} call, can contain following attributes :
-		- source URL of media to load and display
-		- type Type of media ("image"|"video"). default : "image"
-		- transition Name of transition to use. default : "fade"
-		- stretchMode How to stretch the media on screen ("adapt"|"fit"|"crop"). default "crop" (cover all the screen)
-		- centeredX
-		- centeredY
-		- content HTML content to display on top of image
-		- contentOpacity
+	 * @param {Object} arg, can contain following attributes :
+		- source : URL of media to load and display
+		- type : Type of media ("image"|"video"). (Default : "image")
+		- transition : Name of transition to use. (Default : "fade")
+		- stretchMode : How to stretch the media on screen ("adapt"|"fit"|"crop"). (Default : "crop") (cover all the screen)
+		- centeredX {Boolean} (Default: true)
+		- centeredY {Boolean} (Default: true)
+		- content : HTML content to display on top of the image
+		- class : Class names to add to the slide
 		- callback function to call when slide has been loaded and streched
 		@return a promise resolved when the slide has been loaded
 	 */
@@ -139,7 +139,7 @@
 			return loaded.reject("Transition in progress").promise(); // don't allow new call before the previous transition is over
 		}
 
-		if (!$screen) { // first call
+		if (arg.screen || !$screen) { // first call
 			$screen = new Screen(arg.screen, arg.zindex);
 			// Adjust the background size when the w is resized or orientation has changed (iOS)
 			$viewport.on("resize", adjustImage);
