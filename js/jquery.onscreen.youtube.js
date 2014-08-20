@@ -68,7 +68,9 @@
 					parts[0] = "http://youtu.be/" + paramValue;
 
 				} else { // some additional params..
-					options[paramKey] = paramValue;
+					// note that parameters passed through the option object are
+					// prevalent upon thouse found in the URL
+					if (!options[paramKey]) options[paramKey] = paramValue;
 				}
 			});
 

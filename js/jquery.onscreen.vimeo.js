@@ -62,7 +62,7 @@
 
 			$.each(params, function(i, param) {
 				var pparts = param.split("=");
-				options[pparts[0]] = pparts[1];
+				if (!options[pparts[0]]) options[pparts[0]] = pparts[1];
 			});
 
 			src = parts[0];
