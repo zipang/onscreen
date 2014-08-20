@@ -13,7 +13,7 @@
 ;(function($, w, undefined) {
 
 	var $viewport = $(w),
-		$screen, $EMPTY_SLIDE = $();
+		$EMPTY_SLIDE = $();
 
 	// Initialize
 	function Screen(id, zindex) {
@@ -59,32 +59,38 @@
 		}
 	}
 
-	function cssTransition($fromSlide, $toSlide, speed, callback) {
-		$.onScreen.transition = true;
-		$toSlide.addClass("in");
-		$fromSlide.addClass("out");
-		$("img", $screen).show();
-		$screen.addClass("transition");
-		setTimeout(function transitionEnd() {
-			$fromSlide.remove();
-			$screen.removeClass("transition");
-			$toSlide.removeClass("in");
-			$.onScreen.transition = false;
-			if (typeof callback == "function") requestAnimationFrame(callback);
-			$screen.trigger(($toSlide === $EMPTY_SLIDE) ? "emptySlide" : "transitionEnd", $toSlide);
-		}, speed);
+	function cssTransition($screen) {
+		var $screen = $screen; // closure
+		return function($fromSlide, $toSlide, speed, callback) {
+			$.onScreen.transition = true;
+			$toSlide.addClass("in");
+			$fromSlide.addClass("out");
+			$("img", $screen).show();
+			$screen.addClass("transition");
+			setTimeout(function transitionEnd() {
+				$fromSlide.remove();
+				$screen.removeClass("transition");
+				$toSlide.removeClass("in");
+				$.onScreen.transition = false;
+				if (typeof callback == "function") requestAnimationFrame(callback);
+				$screen.trigger(($toSlide === $EMPTY_SLIDE) ? "emptySlide" : "transitionEnd", $toSlide);
+			}, speed);
+		}
 	}
-	function jsTransition($fromSlide, $toSlide, speed, callback) {
-		$.onScreen.transition = true;
-		$fromSlide.fadeOut(speed);
-		$("img", $screen).show();
-		$toSlide.fadeIn(speed, function() {
-			$fromSlide.remove();
-			$.onScreen.transition = false;
-			// Callback
-			if (typeof callback == "function") callback();
-			$screen.trigger(($toSlide === $EMPTY_SLIDE) ? "emptySlide" : "transitionEnd", $toSlide);
-		});
+	function jsTransition($screen) {
+		var $screen = $screen; // closure
+		return function($fromSlide, $toSlide, speed, callback) {
+			$.onScreen.transition = true;
+			$fromSlide.fadeOut(speed);
+			$("img", $screen).show();
+			$toSlide.fadeIn(speed, function() {
+				$fromSlide.remove();
+				$.onScreen.transition = false;
+				// Callback
+				if (typeof callback == "function") callback();
+				$screen.trigger(($toSlide === $EMPTY_SLIDE) ? "emptySlide" : "transitionEnd", $toSlide);
+			});
+		}
 	}
 
 	// Detect CSS3 transitions detection
@@ -126,7 +132,7 @@
 	 */
 	$.onScreen = function(/* arg */) {
 
-		var arg = arguments[0] || "",
+		var arg = arguments[0] || "", $screen,
 			src = (typeof arg === "string") ? arg : arg.source,
 			mediaType = arg.type || "image",
 			plugin = $.onScreen.getPlugin(src), // get the plugin for the corresponding media source
@@ -139,13 +145,12 @@
 			return loaded.reject("Transition in progress").promise(); // don't allow new call before the previous transition is over
 		}
 
-		if (arg.screen || !$screen) { // first call
-			$screen = new Screen(arg.screen, arg.zindex);
-			// Adjust the background size when the w is resized or orientation has changed (iOS)
-			$viewport.on("resize", adjustImage);
+		$screen = new Screen(arg.screen, arg.zindex).show();
 
-		} else {
-			$screen.show(); // !IMPORTANT. An invisible screen container prevents .width() and .height() method to return results when loading images
+		// Adjust the projected image when window is resized or orientation has changed (iOS)
+		if (!$screen.data("monitored")) {
+			$viewport.on("resize", adjustImage($screen));
+			$screen.data("monitored", true);
 		}
 
 		// Extend the settings with those the user has provided
@@ -158,7 +163,7 @@
 
 		if (settings.transition === "fade") { // default fade transition
 			settings.transition = (settings.useCSSTransitions && $.support.transition) ?
-				cssTransition : jsTransition;
+				cssTransition($screen) : jsTransition($screen);
 		}
 
 
@@ -203,7 +208,7 @@
 					$screen.data("image", $imgLoader);
 
 					// warn that we have been loaded
-					loaded.resolve(adjustImage($imgLoader), content);
+					loaded.resolve(adjustImage($screen)(), content);
 
 				}).on("error", function ()  {
 					$screen.data("image", undefined);
@@ -212,59 +217,63 @@
 				}).appendTo($screen).attr("src", src);
 
 		} else { // how do we preload a video ..?
-			$screen.data("image", undefined);
 			loaded.resolve(plugin.load(src, arg), content);
+			$screen.data("image", $("iframe", $screen));
 		}
 
 
 		/**
 		 * Recenter image/content on screen as needed
 		 */
-		function adjustImage() {
+		function adjustImage($screen) {
 
-			var vW = $viewport.width(), vH = $viewport.height(),
-				$image = $screen.data("image");
+			var $screen = $screen; // create the closure
+			return function() {
 
-			if (!$image) return;
+				var vW = $viewport.width(), vH = $viewport.height(),
+					$image = $screen.data("image");
 
-			// try the usual stretch on $image's width
-			var imgRatio  = $image.data("format"),
-				imgWidth  = vW,
-				imgHeight = imgWidth / imgRatio;
+				if (!$image) return;
 
-            if (settings.stretchMode == "crop") {
+				// try the usual stretch on $image's width
+				var imgRatio  = $image.data("format"),
+					imgWidth  = vW,
+					imgHeight = imgWidth / imgRatio;
 
-				if (imgHeight < vH) { // stretch the other way
-					imgHeight = vH;
-					imgWidth  = imgHeight * imgRatio;
+	            if (settings.stretchMode == "crop") {
+
+					if (imgHeight < vH) { // stretch the other way
+						imgHeight = vH;
+						imgWidth  = imgHeight * imgRatio;
+					}
+				} else if (settings.stretchMode == "adapt") {
+
+					if (imgRatio < 1) { // $image in portrait mode : stretch the other way
+						imgHeight = vH;
+						imgWidth  = imgHeight * imgRatio;
+					}
+				} else { // fit
+
+					if (imgHeight > vH) {
+						imgHeight = vH;
+						imgWidth  = imgHeight * imgRatio;
+					}
 				}
-			} else if (settings.stretchMode == "adapt") {
 
-				if (imgRatio < 1) { // $image in portrait mode : stretch the other way
-					imgHeight = vH;
-					imgWidth  = imgHeight * imgRatio;
+	            var position = {position: "absolute", left: 0, top: 0};
+
+				// Center as needed
+				if (settings.centeredY) {
+					$.extend(position, {top: ((vH - imgHeight) / 2) + "px"});
 				}
-			} else { // fit
 
-				if (imgHeight > vH) {
-					imgHeight = vH;
-					imgWidth  = imgHeight * imgRatio;
+				if (settings.centeredX) {
+					$.extend(position, {left: ((vW - imgWidth) / 2) + "px"});
 				}
+
+				return $image.width(imgWidth).height(imgHeight).css(position);
 			}
-
-            var position = {position: "absolute", left: 0, top: 0};
-
-			// Center as needed
-			if (settings.centeredY) {
-				$.extend(position, {top: ((vH - imgHeight) / 2) + "px"});
-			}
-
-			if (settings.centeredX) {
-				$.extend(position, {left: ((vW - imgWidth) / 2) + "px"});
-			}
-
-			return $image.width(imgWidth).height(imgHeight).css(position);
-		}
+		} // adjustImage
 
 		// To act as soon as the image is loaded
 		return loaded.promise();
