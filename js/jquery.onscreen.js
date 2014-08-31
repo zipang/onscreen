@@ -180,8 +180,9 @@
 			if (settings.class) $newSlide.addClass(settings.class);
 
 			// signal that this slide has been loaded
+			// we prepend the image/video so its caption will show below
 			$screen
-				.append($newSlide)
+				.prepend($newSlide)
 				.trigger("loaded", [arg, $newSlide]);
 
 			if ($oldSlide.length || $newSlide.length) {
