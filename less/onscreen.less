@@ -1,0 +1,30 @@
+// main: main.less
+
+@import "mixins.less";
+
+/**
+ * Basic Fade In/Out transition for $.onScreen
+ * (apply the mixin of your choice to the screen container)
+ */
+.screen-fade-transition() {
+	position: fixed;
+	.slide {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		.opacity(1);
+	}
+	.slide.in {
+		.opacity(0);
+	}
+	&.transition {
+		.slide.out {
+			.transition(opacity, 1500ms);
+			.opacity(0);
+		}
+		.slide.in {
+			.transition(opacity, 1500ms);
+			.opacity(1);
+		}
+	}
+}

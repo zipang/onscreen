@@ -1,0 +1,179 @@
+// main: main.less
+
+/*********************
+ CLEARFIXIN'
+*********************/
+// Contain floats: nicolasgallagher.com/micro-clearfix-hack/
+.clearfix() {
+	zoom: 1;
+	&:before, &:after { content: ""; display: table; }
+	&:after { clear: both; }
+}
+
+/*********************
+ BORDER RADIUS
+*********************/
+
+/*
+NOTE: For older browser support (and some mobile),
+don't use the shorthand to define *different* corners.
+
+USAGE: .border-radius(4px);
+*/
+.border-radius(@radius: 4px) {
+	-webkit-border-radius: @radius;
+		 -moz-border-radius: @radius;
+				border-radius: @radius;
+}
+.circle(@radius: 60px) {
+	width: @radius; height: @radius;
+	.border-radius(@radius);
+}
+
+/*********************
+ ALIGNMENT
+*********************/
+.centered() {
+	margin-left:  auto!important;
+	margin-right: auto!important;
+}
+// just need height of container ?
+.vertically-centered(@height) {
+	top: 50%;
+	.height(@height);
+	margin-top: -0.5*@height;
+}
+
+.square(@size: 40px) {
+	.width(@size);
+	.height(@size);
+}
+.circle(@size: 60px) {
+	.square(@size);
+	.border-radius(@size/2);
+}
+
+/*********************
+ OPACITY
+*********************/
+.opacity(@opacity: 0.5) {
+	-moz-opacity: @opacity;
+	-khtml-opacity: @opacity;
+	-webkit-opacity: @opacity;
+	opacity: @opacity;
+	@opperc: @opacity * 100;
+	-ms-filter: ~"progid:DXImageTransform.Microsoft.Alpha(opacity=@{opperc})";
+	filter: ~"alpha(opacity=@{opperc})";
+}
+
+
+
+/*********************
+ background color rgba with IE fallback
+*********************/
+// http://dan.cx/2012/05/rgba-in-ie
+.rgba(@colour, @alpha) {
+		@alphaColour: hsla(hue(@colour), saturation(@colour), lightness(@colour), @alpha);
+		@ieAlphaColour: argb(@alphaColour);
+
+		background-color: @colour; // Fallback for older browsers
+		background-color: @alphaColour;
+
+		// IE hacks
+		zoom: 1; // hasLayout
+		background-color: transparent\9;
+		-ms-filter:  "progid:DXImageTransform.Microsoft.gradient(startColorstr=@{ieAlphaColour}, endColorstr=@{ieAlphaColour})"; // IE 8+
+			filter: ~"progid:DXImageTransform.Microsoft.gradient(startColorstr=@{ieAlphaColour}, endColorstr=@{ieAlphaColour})"; // IE 6 & 7
+}
+
+
+/*********************
+ TRANSITION, TRANSFORMATIONS
+*********************/
+
+/* .transition(all,2s); */
+.transition(@what: all, @time: 0.2s, @transition: ease-in-out) {
+	-webkit-transition: @what @time @transition;
+	-moz-transition:    @what @time @transition;
+	-ms-transition:     @what @time @transition;
+	-o-transition:      @what @time @transition;
+	transition:         @what @time @transition;
+}
+.transition-duration(@time) {
+	-webkit-transition: @time;
+	-moz-transition:    @time;
+	-ms-transition:     @time;
+	-o-transition:      @time;
+	transition:         @time;
+}
+.rotate (@deg) {
+	-webkit-transform: rotate(@deg);
+	-moz-transform:    rotate(@deg);
+	-ms-transform:     rotate(@deg);
+	-o-transform:      rotate(@deg);
+}
+
+.background-size(...) {
+	-webkit-background-size: @arguments;
+	-moz-background-size: @arguments;
+	-o-background-size: @arguments;
+	background-size: @arguments;
+}
+
+
+/*********************
+ SHADOWS
+*********************/
+
+.text-shadow (@string: 0 2px 2px rgba(0, 0, 0, 0.30)) {
+	text-shadow: @string;
+}
+
+/* .boxShadow(0,0,4px,0,#444); */
+.boxShadow(@x: 0, @y: 0, @radius: 4px, @spread: 0, @color: rgba(0,0,0,0.5)) when (isnumber(@x)) {
+	-webkit-box-shadow: @x @y @radius @spread @color;
+		 -moz-box-shadow: @x @y @radius @spread @color;
+			box-shadow: @x @y @radius @spread @color;
+}
+/* .boxShadow(none); */
+.boxShadow(@x: none) when (iskeyword(@x)) {
+	-webkit-box-shadow: @x;
+		 -moz-box-shadow: @x;
+			box-shadow: @x;
+}
+
+
+/*********************
+ CSS TRIANGLE
+*********************/
+//https://github.com/stijnj/less-triangle/blob/master/less-triangle.less
+.triangle-base() {
+	content: '';
+	display: block;
+	width: 0;
+	height: 0;
+}
+.triangle(@direction, @size, @color) when (@direction = up) {
+	.triangle-base();
+	border-left: @size solid transparent;
+	border-right: @size solid transparent;
+	border-bottom: @size solid @color;
+}
+.triangle(@direction, @size, @color) when (@direction = down) {
+	.triangle-base();
+	border-left: @size solid transparent;
+	border-right: @size solid transparent;
+	border-top: @size solid @color;
+}
+.triangle(@direction, @size, @color) when (@direction = left) {
+	.triangle-base();
+	border-top: @size solid transparent;
+	border-bottom: @size solid transparent;
+	border-right: @size solid @color;
+}
+.triangle(@direction, @size, @color) when (@direction = right) {
+	.triangle-base();
+	border-top: @size solid transparent;
+	border-bottom: @size solid transparent;
+	border-left: @size solid @color;
+}

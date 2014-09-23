@@ -2,40 +2,43 @@
 <html>
 <head>
 	<meta charset='utf-8'>
-
-	<link rel="stylesheet" type="text/css" href="css/demo.css" >
 	<title>jQuery onScreen plugin by zipang</title>
+
+    <link href='http://fonts.googleapis.com/css?family=Alegreya+Sans+SC:400,900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="css/main.css" >
 </head>
 
 <body>
 <header>
     <div class="container">
-        <h1>jQuery onScreen</h1>
+        <h1>[on$creen]</h1>
 
-        <h2>Stretch your images on the background.</h2>
-
-        <section id="downloads">
-            <a href="https://github.com/zipang/onscreen/zipball/master" class="btn">Download as .zip</a>
-            <a href="https://github.com/zipang/onscreen/tarball/master" class="btn">Download as .tar.gz</a>
+        <section id="links">
+            <a href="https://github.com/zipang/onscreen/zipball/master" class="btn">Download as .zip</a> ***
             <a href="https://github.com/zipang/onscreen" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
         </section>
+
+        <h2>Stretch your images.</h2>
     </div>
 </header>
 
 
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-<script href="js/jquery.onscreen.js"></script>
-<script href="js/jquery.onscreen.vimeo.js"></script>
-<script href="js/jquery.onscreen.youtube.js"></script>
-<script href="js/jquery.onscreen.slideshow.js"></script>
+<script src="dist/jquery.onscreen-latest.js"></script>
 <script>
     // Load some slides
-    var n = 10, slides = Array(n), 
-        format = function(i) {
-            return (100 + i).toString().substr(1);
+    Number.prototype.times = function(callback, ctx) {
+        for (var i = 1; i <= this; i++) {
+            callback.call(ctx, i);
         }
+    }
+    var slides = [];
 
-    while (n) slides[n] = "slides-" + format(n) + ".jpg";
+    (10).times(function(i) {
+        slides.push("img/slide-" + (100 + i).toString().substr(1) + ".jpg");
+    }); 
+
+    $.onScreen(slides);
 
 </script>
 
