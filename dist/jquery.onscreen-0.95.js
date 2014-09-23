@@ -1,22 +1,16 @@
 /**
- * JQUERY on$creen - 0.95 - Mon Sep 22 2014 06:26:28 GMT+0200 (CEST)
+ * $.onScreen - v0.95 - Mon Sep 22 2014 06:46:08 GMT+0200 (CEST)
 
  * @author zipang (EIDOLON LABS)
  * @url http://github.com/zipang/onscreen
- */
-  /**
- * jQuery onScreen
+ * @copyright (2014) EIDOLON LABS
 
- * @author zipang
- * @copyright 2014 - EIDOLON LABS
- * @url https://github.com/zipang/onscreen
- *
- * Project stretched slides or video with additional content on the screen
- * Include automatic preloading of resources (images) and smooth transitions
- * using CSS3 or JS
- *
+ * Project images or video full screen or on any HTML element
+ * Supports additional HTML content
+ * Automatic preloading of resources (images) 
+ * Smooth transitions using CSS3 or JS 
  */
-;(function($, w, undefined) {
+ ;(function($, w, undefined) {
 
 	var $viewport = $(w),
 		$EMPTY_SLIDE = $();
