@@ -1,5 +1,5 @@
 /**
- * $.onScreen - v1.0rc2 - Wed Sep 24 2014 21:48:00 GMT+0200 (CEST)
+ * $.onScreen - v1.0rc2 - Wed Sep 24 2014 22:17:10 GMT+0200 (CEST)
 
  * @author zipang (EIDOLON LABS)
  * @url http://github.com/zipang/onscreen
@@ -17,18 +17,17 @@
 
 	// Initialize the screen to project on
 	function Screen(screen, params) {
+		var $screen;
 
-		if (!screen) {
-			screen = "#screen";
-		} else if (typeof screen === "string") {
-			if (screen.indexOf("#") !== 0) screen = "#" + screen; // make it an id
+		if (typeof screen === "string") {
+			$screen = $("#" + screen.replace(/^#/, ""));
+		} else { // DOM Element or maybe undefined
+			$screen = $(screen);
 		}
-		
-		var $screen = $(screen);
 
 		if ($screen.length === 0) { // doesn't exist : create the full page screen
 			$screen = $("<div>")
-				.attr("id", screen)
+				.attr("id", screen || "screen")
 				.css({
 					position: "fixed",
 					left: 0, top: 0,

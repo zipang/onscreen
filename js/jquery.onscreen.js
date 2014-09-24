@@ -5,18 +5,17 @@
 
 	// Initialize the screen to project on
 	function Screen(screen, params) {
+		var $screen;
 
-		if (!screen) {
-			screen = "#screen";
-		} else if (typeof screen === "string") {
-			if (screen.indexOf("#") !== 0) screen = "#" + screen; // make it an id
+		if (typeof screen === "string") {
+			$screen = $("#" + screen.replace(/^#/, ""));
+		} else { // DOM Element or maybe undefined
+			$screen = $(screen);
 		}
-		
-		var $screen = $(screen);
 
 		if ($screen.length === 0) { // doesn't exist : create the full page screen
 			$screen = $("<div>")
-				.attr("id", screen)
+				.attr("id", screen || "screen")
 				.css({
 					position: "fixed",
 					left: 0, top: 0,
