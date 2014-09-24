@@ -6,9 +6,12 @@
 	// Initialize the screen to project on
 	function Screen(screen, params) {
 
-		if (typeof screen === "string") {
+		if (!screen) {
+			screen = "#screen";
+		} else if (typeof screen === "string") {
 			if (screen.indexOf("#") !== 0) screen = "#" + screen; // make it an id
 		}
+		
 		var $screen = $(screen);
 
 		if ($screen.length === 0) { // doesn't exist : create the full page screen
@@ -73,15 +76,24 @@
 	}
 	function jsTransition($screen) {
 		var $screen = $screen; // closure
+		
 		return function($fromSlide, $toSlide, speed, callback) {
-			$fromSlide.fadeOut(speed);
-			$("img", $screen).show();
-			$toSlide.fadeIn(speed, function() {
-				$fromSlide.remove();
-				// Callback
-				if (typeof callback == "function") callback();
-				$screen.trigger(($toSlide === $EMPTY_SLIDE) ? "emptySlide" : "transitionEnd", $toSlide);
-			});
+
+			$fromSlide.animate({opacity: 0}, speed);
+
+			$toSlide
+				.animate({opacity: 1}, {
+					duration: speed, 
+					start: function() {
+						$toSlide.css("display", "block");
+					},
+					complete : function() {
+						$fromSlide.remove();
+						// Callback
+						if (typeof callback == "function") callback();
+						$screen.trigger(($toSlide === $EMPTY_SLIDE) ? "emptySlide" : "transitionEnd", $toSlide);
+					}
+				});
 		}
 	}
 
@@ -136,6 +148,11 @@
 
 
 		if (!src) return loaded.reject("Invalid Params : No source").promise();
+
+		if (src === "settings") { // settings redefinitions
+			$.extend(defaultSettings, params);			
+			return loaded.resolve(defaultSettings);;
+		}
 
 		$screen = new Screen(params.screen, params).show();
 

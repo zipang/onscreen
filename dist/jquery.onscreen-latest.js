@@ -1,1 +1,1 @@
-../dist/jquery.onscreen-1.0rc1.js
+../dist/jquery.onscreen-1.0rc2.js

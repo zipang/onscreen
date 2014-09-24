@@ -7,7 +7,7 @@
  * (apply the mixin of your choice to the screen container)
  */
 .screen-fade-transition() {
-	position: fixed;
+	position: relative; // the background #screen will use fixed instead, override if you need
 	.slide {
 		position: absolute;
 		width: 100%;
