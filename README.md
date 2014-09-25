@@ -7,20 +7,23 @@ Andy Warhol
 
 ## Purpose
 
-* Control slides projection (Media + overlays) on the background or on any element of your page.
-* Any further call makes a nice transition between the active slide and the new ones.
-* Transitions can be controlled by JS scripts or CSS3 animations.
+* Control slides projection (Media + overlays) on the page background or on any element of your page with a large choice of settings (stretch, padding).
+* Dynamically resize and reposition the image when screen is resized or rotated.
+* Any further call on the same screen element will display a nice transition that can be controlled by JavaScript or CSS3 animations.
+
+```js
+// Load and display a streched background image (no container specified)
+$.onScreen("img/background.jpg");
+```
 
 ## Extensible with plugins.
 
-The only included plugin is an image stretcher plugin that allow deferred loading of images, 
+What media can be displayed and how they are displayed is the matter of integrating the plugins you need.
+The first plugin  functionality is offered byt the image plugin is an image stretcher plugin that allow deferred loading of images, 
 thus reproducing all the functionality of backstretch.  
 Further plugins allready allow to display : transparent slide, video slides (Vimeo, Youtube..)
 
-## Slideshows plugins.
+## Slideshow.
 
-Slideshow is not a native functionality but it's really easy to implement : just call 
-`$.onScreen()` several times and here is your slideshow..  
-A basic slideshow plugin is offered that just takes a list of media sources and can be 
-controlled with the keyboard.
+A basic slideshow plugin is offered that just takes a list of media sources and can be controlled with the keyboard.
 
