@@ -1,9 +1,9 @@
 /**
- * $.onScreen - v0.95 - Mon Sep 22 2014 06:46:08 GMT+0200 (CEST)
+ * $.onScreen - v1.0rc3 - Tue Jan 13 2015 15:36:56 GMT+0100 (CET)
 
  * @author zipang (EIDOLON LABS)
  * @url http://github.com/zipang/onscreen
- * @copyright (2014) EIDOLON LABS
+ * @copyright (2015) EIDOLON LABS
 
  * Project images or video full screen or on any HTML element
  * Supports additional HTML content
@@ -15,29 +15,32 @@
 	var $viewport = $(w),
 		$EMPTY_SLIDE = $();
 
-	// Initialize
-	function Screen(id, zindex) {
+	// Initialize the screen to project on
+	function Screen(screen, params) {
+		var screenId = (typeof screen === "string" ? screen : _DEFAULTS.screen).replace(/^#/, ""),
+			$screen = $(screen || "#" + screenId);
 
-		var screenId = (id  || "screen").replace("#", ""),
-			$screen = $("#" + screenId);
+		if ($screen.length === 1) {
+			return $screen;
 
-		if ($screen.length === 0) {
-			$screen = $("<div>")
+		} else { // doesn't exist : create the default page screen
+			return $("<div>")
 				.attr("id", screenId)
 				.css({
 					position: "fixed",
 					left: 0, top: 0,
-					margin: 0, padding: 0,
+					margin: 0, padding: params.padding || 0,
 					overflow: "hidden",
-					zIndex: zindex || -999999,
+					zIndex: params.zindex || -999999,
 					height: "100%", width: "100%"
 				})
 				.prependTo("body");
 		}
-		return $screen;
 	}
 
-
+	/**
+	 * Create the div.slide element that'll receive the image and content
+	 */
 	function Slide($bg, content, type) {
 
 		if ($bg) {
@@ -59,10 +62,13 @@
 		}
 	}
 
+	/**
+	 * CSS Transition will apply the 'in' and 'out' classes to slides that must transition
+	 * the 'transition' class will be applied to the screen element
+	 */
 	function cssTransition($screen) {
 		var $screen = $screen; // closure
 		return function($fromSlide, $toSlide, speed, callback) {
-			$.onScreen.transition = true;
 			$toSlide.addClass("in");
 			$fromSlide.addClass("out");
 			$("img", $screen).show();
@@ -71,7 +77,6 @@
 				$fromSlide.remove();
 				$screen.removeClass("transition");
 				$toSlide.removeClass("in");
-				$.onScreen.transition = false;
 				if (typeof callback == "function") requestAnimationFrame(callback);
 				$screen.trigger(($toSlide === $EMPTY_SLIDE) ? "emptySlide" : "transitionEnd", $toSlide);
 			}, speed);
@@ -79,21 +84,28 @@
 	}
 	function jsTransition($screen) {
 		var $screen = $screen; // closure
+
 		return function($fromSlide, $toSlide, speed, callback) {
-			$.onScreen.transition = true;
-			$fromSlide.fadeOut(speed);
-			$("img", $screen).show();
-			$toSlide.fadeIn(speed, function() {
-				$fromSlide.remove();
-				$.onScreen.transition = false;
-				// Callback
-				if (typeof callback == "function") callback();
-				$screen.trigger(($toSlide === $EMPTY_SLIDE) ? "emptySlide" : "transitionEnd", $toSlide);
-			});
+
+			$fromSlide.animate({opacity: 0}, speed);
+
+			$toSlide
+				.animate({opacity: 1}, {
+					duration: speed,
+					start: function() {
+						$toSlide.css("display", "block");
+					},
+					complete : function() {
+						$fromSlide.remove();
+						// Callback
+						if (typeof callback == "function") callback();
+						$screen.trigger(($toSlide === $EMPTY_SLIDE) ? "emptySlide" : "transitionEnd", $toSlide);
+					}
+				});
 		}
 	}
 
-	// Detect CSS3 transitions detection
+	// Support for CSS3 transitions detection
 	var doc = document,
 		docStyle = (doc.body || doc.documentElement).style;
 	$.support.transition = (
@@ -103,14 +115,12 @@
 		"transition" in docStyle
 	);
 
-	/* *
-	 *
-	 */
-	var defaultSettings = {
+	var _DEFAULTS = {
+		screen: "#screen",				 // That's the default ID of the screen when not passed
 		stretchMode: "crop",     // Should we occupy full screen width or fit into it?
 		centeredX: true,         // Should we center the image on the X axis?
 		centeredY: true,         // Should we center the image on the Y axis?
-		speed: 1000,             // transition speed after image load (e.g. "fast" or 500)
+		transitionSpeed: 1000,   // transition speed after image load (e.g. "fast" or 500)
 		useCSSTransitions: true,
 		transition: "fade"
 	};
@@ -118,11 +128,12 @@
 
 	/**
 	 * The only public method to call to project an image or a movie
-	 * @param {Object} arg, can contain following attributes :
-		- source : URL of media to load and display
+	 * @param {Object} params, can contain following attributes :
+		- source (required) : URL of media to load and display
 		- type : Type of media ("image"|"video"). (Default : "image")
 		- transition : Name of transition to use. (Default : "fade")
 		- stretchMode : How to stretch the media on screen ("adapt"|"fit"|"crop"). (Default : "crop") (cover all the screen)
+		- padding {String} : The CSS padding property to define the active zone of the screen. (Default: "0" no padding)
 		- centeredX {Boolean} (Default: true)
 		- centeredY {Boolean} (Default: true)
 		- content : HTML content to display on top of the image
@@ -130,22 +141,27 @@
 		- callback function to call when slide has been loaded and streched
 		@return a promise resolved when the slide has been loaded
 	 */
-	$.onScreen = function(/* arg */) {
+	function onScreen(/* params | src, displayOptions */) {
 
-		var arg = arguments[0] || "", $screen,
-			src = (typeof arg === "string") ? arg : arg.source,
-			mediaType = arg.type || "image",
-			plugin = $.onScreen.getPlugin(src), // get the plugin for the corresponding media source
-			content = arg.content,
-			callback = arg.callback,
+		var $screen,
+			arg1 = arguments[0] || "",
+			params = arg1.source ? arg1 : arguments[1] || {},
+			src = (typeof arg1 === "string") ? arg1 : params.source,
+			mediaType = params.type || "image",
+			plugin = onScreen.getPlugin(src), // get the plugin for the corresponding media source
+			content = params.content,
+			callback = params.callback,
 			loaded = $.Deferred(); // plugin.load(src)
 
 
-		if (!arg || $.onScreen.transition) {
-			return loaded.reject("Transition in progress").promise(); // don't allow new call before the previous transition is over
+		if (!src) return loaded.reject("Invalid Params : No source").promise();
+
+		if (src === "settings") { // settings redefinitions
+			$.extend(_DEFAULTS, params);
+			return loaded.resolve(_DEFAULTS);;
 		}
 
-		$screen = new Screen(arg.screen, arg.zindex).show();
+		$screen = new Screen(params.screen, params).show();
 
 		// Adjust the projected image when window is resized or orientation has changed (iOS)
 		if (!$screen.data("monitored")) {
@@ -154,11 +170,9 @@
 		}
 
 		// Extend the settings with those the user has provided
-		var settings = $screen.data("settings") || defaultSettings; // If this has been called once before, use the old settings as the default
+		var settings = $screen.data("settings") || _DEFAULTS; // If this has been called once before, use the old settings as the default
 
-		for (var key in defaultSettings) {
-			if (arg.hasOwnProperty(key)) settings[key] = arg[key];
-		}
+		$.extend(settings, params);
 		$screen.data("settings", settings);
 
 		if (settings.transition === "fade") { // default fade transition
@@ -168,7 +182,7 @@
 
 
 		// Prepare to delete any old images
-		var $oldSlide = $screen.find(".slide"), $newSlide, $imgLoader;
+		var $oldSlide = $screen.find(".slide"), $newSlide;
 
 		// Once loaded : insert the slide (bg + content) and launch the transition !
 		loaded.then(function($bg, content) {
@@ -183,10 +197,10 @@
 			// signal that this slide has been loaded
 			$screen
 				.append($newSlide)
-				.trigger("loaded", [arg, $newSlide]);
+				.trigger("loaded", [params, $newSlide]);
 
 			if ($oldSlide.length || $newSlide.length) {
-				settings.transition($oldSlide, $newSlide, settings.speed, callback);
+				settings.transition($oldSlide, $newSlide, settings.transitionSpeed, callback);
 			}
 		});
 
@@ -197,13 +211,14 @@
 
 		} else if (mediaType === "image") {
 
-			$imgLoader = $("<img>")
-				.css({
+			if (typeof src === "string") {
+				var $imgLoader = $("<img>").css({
 					display: "none",
 					zIndex: -999999,
 					width: "auto", height: "auto"
+				});
 
-				}).on("load", function imageLoaded() {
+				$imgLoader.on("load", function imageLoaded() {
 
 					$imgLoader.data("format", $imgLoader.width() / $imgLoader.height()); // store the native image format when just loaded
 					$screen.data("image", $imgLoader);
@@ -217,8 +232,15 @@
 
 				}).appendTo($screen).attr("src", src);
 
+			} else { // <img> allready
+				$screen.data("image", src);
+				src.data("format", src.width() / src.height()); // store the native image format when just loaded
+				src.removeAttr("style").appendTo($screen);
+				loaded.resolve(adjustImage($screen)(), content);
+			}
+
 		} else { // how do we preload a video ..?
-			loaded.resolve(plugin.load(src, arg), content);
+			loaded.resolve(plugin.load(src, params), content);
 			$screen.data("image", $("iframe", $screen));
 		}
 
@@ -231,7 +253,8 @@
 			var $screen = $screen; // create the closure
 			return function() {
 
-				var vW = $viewport.width(), vH = $viewport.height(),
+				var vW = $screen.width(), // - $screen.css("paddingLeft") - $screen.css("paddingRight"),
+					vH = $screen.height(), // - $screen.css("paddingTop") - $screen.css("paddingBottom"),
 					$image = $screen.data("image");
 
 				if (!$image) return;
@@ -241,7 +264,7 @@
 					imgWidth  = vW,
 					imgHeight = imgWidth / imgRatio;
 
-	            if (settings.stretchMode == "crop") {
+				if (settings.stretchMode == "crop") {
 
 					if (imgHeight < vH) { // stretch the other way
 						imgHeight = vH;
@@ -261,7 +284,7 @@
 					}
 				}
 
-	            var position = {position: "absolute", left: 0, top: 0};
+				var position = {position: "absolute", left: 0, top: 0};
 
 				// Center as needed
 				if (settings.centeredY) {
@@ -280,10 +303,11 @@
 		return loaded.promise();
 	};
 
-	$.extend($.onScreen, {
+	$.extend(onScreen, {
+		_plugins: {},
 		getPlugin : function(src, type) {
 
-			var plugins = $.onScreen.plugins,
+			var plugins = onScreen._plugins,
 				plugin, pluginName;
 
 			if (type && plugins[type]) return plugins[type];
@@ -298,12 +322,15 @@
 			return undefined;
 		},
 		addPlugin : function(name, test, bgFactory) {
-			var plugins = ($.onScreen.plugins === undefined) ? $.onScreen.plugins = {} : $.onScreen.plugins;
-
-			plugins[name] = {
-				canHandle: test,
+			var testMethod = (test instanceof RegExp) ?
+				function(src) {
+					return test.test(src);
+				} : test;
+			onScreen._plugins[name] = {
+				canHandle: testMethod,
 				load: bgFactory
 			};
+			return onScreen;
 		}
 	});
 
@@ -311,23 +338,153 @@
 	/**
 	 * Adds our only original plugin
 	 */
-	$.onScreen.addPlugin("image", function test(src) {
-		return (/\.(png|jpg|jpeg|gif)$/i).test(src);
+	onScreen.addPlugin("image", function test(src) {
+		if (typeof src === "string") {
+			return /\.(png|jpg|jpeg|gif)$/i.test(src);
 
-	}, function build(src, options) {
-
+		} else if ($(src).prop("tagName") === "IMG") {
+			return true;
+		}
+	}, function build(src) {
+		return src;
 	});
 
-	$.onScreen.addPlugin("empty-slide", function test(src) {
-		return (typeof src !== "string");
+	$.onScreen = onScreen;
 
-	}, function build(src, options) {
+})(window.jQuery || window.Zepto, this);
 
+
+(function($, w, undefined) {
+
+	var onScreen = $.onScreen;
+
+	if (!onScreen) return;
+
+	var _DEFAULTS = {
+		screen: "#screen",
+		slideDuration: 4000,
+		transitionSpeed: 1500,
+		keyControls: true, // support default key pressed actions
+		videoPlayer: {
+			bgcolor: "black",
+			width: 960,
+			height: 540,
+			autoplay: 1,
+			color: "111"
+		}
+	};
+
+	function SlideShow(slides, options) {
+
+		var settings = $.extend({}, SlideShow.defaults, options),
+			len = slides.length,
+			currentIndex = 0,
+			autoplay = true;
+
+		/**
+		 * Go to the specified slide, or to the next one
+		 */
+		function displaySlide(index, options) {
+
+			if (typeof index === "string" && index === "last") {
+				currentIndex = len - 1;
+
+			} else if (typeof index === "string" && index === "fist") {
+				currentIndex = 0;
+
+			} else if (index === undefined || index < 0 || index >= len) {
+				// invalid value > auto play
+				currentIndex = (currentIndex + 1) % len;
+
+			} else {
+				currentIndex = index;
+			}
+
+			return onScreen(slides[currentIndex], options);
+		}
+
+
+		/**
+		 * Program next slide
+		 */
+		function nextTransition(slide) {
+			displaySlide.future = (autoplay) ? setTimeout(function () {
+				requestAnimationFrame(displaySlide);
+			}, settings.slideDuration) : 0;
+		}
+
+		function stop() {
+			autoplay = false;
+			clearTimeout(displaySlide.future);
+		}
+		function play() {
+			autoplay = true;
+			displaySlide();
+		}
+		function next(evt) {
+			stop();
+			displaySlide(currentIndex + 1);
+			if (evt) evt.preventDefault();
+		}
+		function previous(evt) {
+			stop();
+			displaySlide(currentIndex ? currentIndex - 1 : len - 1);
+			if (evt) evt.preventDefault();
+		}
+
+		function playPause() {
+			(autoplay) ? stop() : play();
+		}
+
+		// Keyboard Handler
+		function keyHandler(evt) {
+			switch (evt.keyCode) {
+				case 37: // LEFT
+					previous();
+					break;
+				case 39: // RIGHT
+					next();
+					break;
+				case 32: // SPACE
+					playPause();
+			}
+		}
+
+		if (settings.keyControls) $(document).on("keydown", keyHandler);
+
+		onScreen("settings", settings); // this first call just sets the defaults settings
+
+		displaySlide(0);
+
+		return { // return the interface
+			stop: stop,
+			play: play,
+			playPause: playPause,
+			displaySlide: displaySlide,
+			previous: previous,
+			next: next
+		};
+	}
+
+	SlideShow.defaults = _DEFAULTS;
+
+	// Redefine $.onScreen to handle an array of slides
+	$.onScreen = function(slides, options) {
+		if ($.isArray(slides)) {
+			return new SlideShow(slides, options);
+
+		} else {
+			onScreen(slides, options);
+		}
+	}
+	$.extend($.onScreen, {
+		_plugins: onScreen._plugins,
+		getPlugin: onScreen.getPlugin,
+		addPlugin: onScreen.addPlugin
 	});
 
 
 })(window.jQuery || window.Zepto, this);
-
 
 /* YOUTUBE PLUGIN FOR jQuery onScreen
   EXAMPLE

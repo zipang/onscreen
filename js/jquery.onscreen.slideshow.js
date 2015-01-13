@@ -5,6 +5,7 @@
 	if (!onScreen) return;
 
 	var _DEFAULTS = {
+		screen: "#screen",
 		slideDuration: 4000,
 		transitionSpeed: 1500,
 		keyControls: true, // support default key pressed actions
@@ -21,7 +22,7 @@
 
 		var settings = $.extend({}, SlideShow.defaults, options),
 			len = slides.length,
-			currentIndex = 0, 
+			currentIndex = 0,
 			autoplay = true;
 
 		/**
@@ -90,9 +91,9 @@
 					break;
 				case 32: // SPACE
 					playPause();
-			}		
+			}
 		}
-		
+
 		if (settings.keyControls) $(document).on("keydown", keyHandler);
 
 		onScreen("settings", settings); // this first call just sets the defaults settings
@@ -114,7 +115,7 @@
 	// Redefine $.onScreen to handle an array of slides
 	$.onScreen = function(slides, options) {
 		if ($.isArray(slides)) {
-			new SlideShow(slides, options);
+			return new SlideShow(slides, options);
 
 		} else {
 			onScreen(slides, options);

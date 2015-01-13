@@ -5,17 +5,15 @@
 
 	// Initialize the screen to project on
 	function Screen(screen, params) {
-		var $screen;
+		var screenId = (typeof screen === "string" ? screen : _DEFAULTS.screen).replace(/^#/, ""),
+			$screen = $(screen || "#" + screenId);
 
-		if (typeof screen === "string") {
-			$screen = $("#" + screen.replace(/^#/, ""));
-		} else { // DOM Element or maybe undefined
-			$screen = $(screen);
-		}
+		if ($screen.length === 1) {
+			return $screen;
 
-		if ($screen.length === 0) { // doesn't exist : create the full page screen
-			$screen = $("<div>")
-				.attr("id", screen || "screen")
+		} else { // doesn't exist : create the default page screen
+			return $("<div>")
+				.attr("id", screenId)
 				.css({
 					position: "fixed",
 					left: 0, top: 0,
@@ -26,7 +24,6 @@
 				})
 				.prependTo("body");
 		}
-		return $screen;
 	}
 
 	/**
@@ -75,14 +72,14 @@
 	}
 	function jsTransition($screen) {
 		var $screen = $screen; // closure
-		
+
 		return function($fromSlide, $toSlide, speed, callback) {
 
 			$fromSlide.animate({opacity: 0}, speed);
 
 			$toSlide
 				.animate({opacity: 1}, {
-					duration: speed, 
+					duration: speed,
 					start: function() {
 						$toSlide.css("display", "block");
 					},
@@ -106,10 +103,8 @@
 		"transition" in docStyle
 	);
 
-	/* *
-	 *
-	 */
-	var defaultSettings = {
+	var _DEFAULTS = {
+		screen: "#screen",				 // That's the default ID of the screen when not passed
 		stretchMode: "crop",     // Should we occupy full screen width or fit into it?
 		centeredX: true,         // Should we center the image on the X axis?
 		centeredY: true,         // Should we center the image on the Y axis?
@@ -126,6 +121,7 @@
 		- type : Type of media ("image"|"video"). (Default : "image")
 		- transition : Name of transition to use. (Default : "fade")
 		- stretchMode : How to stretch the media on screen ("adapt"|"fit"|"crop"). (Default : "crop") (cover all the screen)
+		- padding {String} : The CSS padding property to define the active zone of the screen. (Default: "0" no padding)
 		- centeredX {Boolean} (Default: true)
 		- centeredY {Boolean} (Default: true)
 		- content : HTML content to display on top of the image
@@ -149,8 +145,8 @@
 		if (!src) return loaded.reject("Invalid Params : No source").promise();
 
 		if (src === "settings") { // settings redefinitions
-			$.extend(defaultSettings, params);			
-			return loaded.resolve(defaultSettings);;
+			$.extend(_DEFAULTS, params);
+			return loaded.resolve(_DEFAULTS);;
 		}
 
 		$screen = new Screen(params.screen, params).show();
@@ -162,7 +158,7 @@
 		}
 
 		// Extend the settings with those the user has provided
-		var settings = $screen.data("settings") || defaultSettings; // If this has been called once before, use the old settings as the default
+		var settings = $screen.data("settings") || _DEFAULTS; // If this has been called once before, use the old settings as the default
 
 		$.extend(settings, params);
 		$screen.data("settings", settings);
@@ -256,7 +252,7 @@
 					imgWidth  = vW,
 					imgHeight = imgWidth / imgRatio;
 
-	            if (settings.stretchMode == "crop") {
+				if (settings.stretchMode == "crop") {
 
 					if (imgHeight < vH) { // stretch the other way
 						imgHeight = vH;
@@ -276,7 +272,7 @@
 					}
 				}
 
-	            var position = {position: "absolute", left: 0, top: 0};
+				var position = {position: "absolute", left: 0, top: 0};
 
 				// Center as needed
 				if (settings.centeredY) {
