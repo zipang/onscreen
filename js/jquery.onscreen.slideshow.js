@@ -5,6 +5,7 @@
 	if (!onScreen) return;
 
 	var _DEFAULTS = {
+		autoplay: true,
 		screen: "#screen",
 		slideDuration: 4000,
 		transitionSpeed: 1500,
@@ -23,7 +24,7 @@
 		var settings = $.extend({}, SlideShow.defaults, options),
 			len = slides.length,
 			currentIndex = 0,
-			autoplay = true;
+			autoplay = settings.autoplay;
 
 		/**
 		 * Go to the specified slide, or to the next one
@@ -44,18 +45,15 @@
 				currentIndex = index;
 			}
 
+			// Program next slide
+			displaySlide.future = (autoplay) ? setTimeout(function () {
+				requestAnimationFrame(displaySlide);
+			}, settings.slideDuration) : 0;
+
 			return onScreen(slides[currentIndex], options);
 		}
 
 
-		/**
-		 * Program next slide
-		 */
-		function nextTransition(slide) {
-			displaySlide.future = (autoplay) ? setTimeout(function () {
-				requestAnimationFrame(displaySlide);
-			}, settings.slideDuration) : 0;
-		}
 
 		function stop() {
 			autoplay = false;
