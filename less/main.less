@@ -4,7 +4,7 @@ html {
 	font-size: 18px;
 }
 body {
-	font-family: Georgia, Serif;
+	font-family: Raleway, Helvetica, sans-serif;
 	color: white;
 }
 h1, h2, h3 {
@@ -23,18 +23,18 @@ h2 {
 	margin: 3em 0 2em;
 }
 
-a {
+a, a:visited {
 	text-decoration: none;
+	color: #337AD8;
 	&:hover {
 		color: white;
-		text-decoration: underline;
 	}
 }
-section.links, a, a:visited {
+#links {
+	.centered();
 	text-align: center;
-	font-weight: 700;
-	font-size: 32px;
-	color: #337AD8;	
+	font-weight: 400;
+	font-size: 30px;
 }
 .container {
 	max-width: 960px;

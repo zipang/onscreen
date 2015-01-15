@@ -1,5 +1,5 @@
 /**
- * $.onScreen - v1.0rc3 - Tue Jan 13 2015 15:36:56 GMT+0100 (CET)
+ * $.onScreen - v1.0rc4 - Thu Jan 15 2015 03:06:41 GMT+0100 (CET)
 
  * @author zipang (EIDOLON LABS)
  * @url http://github.com/zipang/onscreen
@@ -361,6 +361,7 @@
 	if (!onScreen) return;
 
 	var _DEFAULTS = {
+		autoplay: true,
 		screen: "#screen",
 		slideDuration: 4000,
 		transitionSpeed: 1500,
@@ -379,7 +380,7 @@
 		var settings = $.extend({}, SlideShow.defaults, options),
 			len = slides.length,
 			currentIndex = 0,
-			autoplay = true;
+			autoplay = settings.autoplay;
 
 		/**
 		 * Go to the specified slide, or to the next one
@@ -400,18 +401,15 @@
 				currentIndex = index;
 			}
 
+			// Program next slide
+			displaySlide.future = (autoplay) ? setTimeout(function () {
+				requestAnimationFrame(displaySlide);
+			}, settings.slideDuration) : 0;
+
 			return onScreen(slides[currentIndex], options);
 		}
 
 
-		/**
-		 * Program next slide
-		 */
-		function nextTransition(slide) {
-			displaySlide.future = (autoplay) ? setTimeout(function () {
-				requestAnimationFrame(displaySlide);
-			}, settings.slideDuration) : 0;
-		}
 
 		function stop() {
 			autoplay = false;
