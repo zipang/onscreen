@@ -5,7 +5,7 @@
 
 	// Initialize the screen to project on
 	function Screen(screen, params) {
-		var screenId = (typeof screen === "string" ? screen : _DEFAULTS.screen).replace(/^#/, ""),
+		var screenId = (typeof screen === "string" ? screen.replace(/^#/, "") : _DEFAULTS.screen),
 			$screen = $(screen || "#" + screenId);
 
 		if ($screen.length === 1) {
