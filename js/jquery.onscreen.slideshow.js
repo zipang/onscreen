@@ -29,7 +29,7 @@
 		/**
 		 * Go to the specified slide, or to the next one
 		 */
-		function displaySlide(index, options) {
+		function displaySlide(index) {
 
 			if (typeof index === "string" && index === "last") {
 				currentIndex = len - 1;
@@ -50,7 +50,12 @@
 				requestAnimationFrame(displaySlide);
 			}, settings.slideDuration) : 0;
 
-			return onScreen(slides[currentIndex], options);
+			// display the new slide
+			var slide = slides[currentIndex];
+			onScreen(typeof slide === "string" ? slide : slide.src, settings);
+
+			// dispatch slide events as requested
+			if (settings.events) $(settings.screen).trigger("slide", slides[currentIndex]);
 		}
 
 
