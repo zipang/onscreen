@@ -339,5 +339,5 @@
 
 	$.onScreen = onScreen;
 
-})(window.jQuery || window.Zepto, this);
+})(window.jQuery || window.Zepto, window);
 
