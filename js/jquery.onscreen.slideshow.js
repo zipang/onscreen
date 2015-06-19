@@ -52,7 +52,12 @@
 
 			// display the new slide
 			var slide = slides[currentIndex];
-			onScreen(typeof slide === "string" ? slide : slide.src, settings);
+			if (typeof slide === "object") {
+				onScreen(slide.src, $.extend({}, settings, slide));
+
+			} else { // string
+				onScreen(slide, settings);
+			}
 
 			// dispatch slide events as requested
 			if (settings.events) $(settings.screen).trigger("slide", slides[currentIndex]);
@@ -131,4 +136,4 @@
 	});
 
 
-})(window.jQuery || window.Zepto, window);
+})(window.jQuery || window.Zepto, this);
