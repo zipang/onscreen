@@ -1,4 +1,16 @@
-;(function($, w, undefined) {
+/**
+ * $.onScreen - v1.1.1 - Fri Jun 19 2015 15:17:53 GMT+0200 (CEST)
+
+ * @author zipang (EIDOLON LABS)
+ * @url http://github.com/zipang/onscreen
+ * @copyright (2015) EIDOLON LABS
+
+ * Project images or video full screen or on any HTML element
+ * Supports additional HTML content
+ * Automatic preloading of resources (images) 
+ * Smooth transitions using CSS3 or JS 
+ */
+ ;(function($, w, undefined) {
 
 	var $viewport = $(w),
 		$EMPTY_SLIDE = $();
@@ -341,6 +353,7 @@
 
 })(window.jQuery || window.Zepto, window);
 
+
 (function($, w, undefined) {
 
 	var onScreen = $.onScreen;
@@ -395,7 +408,12 @@
 
 			// display the new slide
 			var slide = slides[currentIndex];
-			onScreen(typeof slide === "string" ? slide : slide.src, settings);
+			if (typeof slide === "object") {
+				onScreen(slide.src, $.extend({}, settings, slide));
+
+			} else { // string
+				onScreen(slide, settings);
+			}
 
 			// dispatch slide events as requested
 			if (settings.events) $(settings.screen).trigger("slide", slides[currentIndex]);
@@ -474,4 +492,209 @@
 	});
 
 
-})(window.jQuery || window.Zepto, window);
+})(window.jQuery || window.Zepto, this);
+
+/* YOUTUBE PLUGIN FOR jQuery onScreen
+  EXAMPLE
+  *	YOUTUBE SHARE URL :
+	http://youtu.be/xA8W4xbVylw
+  * GENERATED PLAYER
+	<div class="video-container">
+		<iframe src="//www.youtube.com/embed/xA8W4xbVylw?rel=0"
+			width="853" height="480" frameborder="0" allowfullscreen>
+		</iframe>
+	</div>
+*/
+(function($) {
+
+	// DEFAULT VALUES
+	var PLAYER_WIDTH  = 640,
+		PLAYER_HEIGHT = 480;
+
+	/**
+	 * Detect a VIMEO URL
+	 */
+	function detectYoutubeSource(src) {
+		return (src && /youtu/gi.test(src));
+	}
+
+	function extractVideoId(youtubeShareUrl) {
+		/* We will not receive the watch?v= kind of URLs
+		   They have been transformed into standard share URLs
+		if (youtubeUrl.indexOf("watch?v=") !== -1) {
+			// that's the page URL !
+			return youtubeUrl.split("watch?v=").pop();
+		} */
+		return youtubeShareUrl.split("/").pop(); // extract last member
+	}
+
+	/**
+	 * This is the iframe source URL
+	 */
+	function generatePlayerURL(videoId, options) {
+		var url    = "//www.youtube.com/embed/" + videoId,
+			params = ["rel=0&showinfo=0"];// don't show related videos and top title/info bar
+
+		// Automatically launch video
+		if (options.autoplay) params.push("autoplay=1");
+
+		return [url, params.join("&")].join("?");
+	}
+
+	/**
+	 * Build the player for the requested youtube URL
+	 */
+	function generatePlayer(src, options) {
+
+		options = options || {};
+
+		// extract params passed in the URL like : ?width=640&height=480
+		if (src.indexOf("?") !== -1) {
+
+			var parts = src.split("?"),
+				params = parts[1].split("&");
+
+			$.each(params, function(i, paramExpr) {
+				var pparts = paramExpr.split("="),
+					paramKey = pparts[0],
+					paramValue = pparts[1];
+
+				if (paramKey === "v") { // that's the video id !
+					// reforge the real share URL
+					parts[0] = "http://youtu.be/" + paramValue;
+
+				} else { // some additional params..
+					// note that parameters passed through the option object are
+					// prevalent upon thouse found in the URL
+					if (!options[paramKey]) options[paramKey] = paramValue;
+				}
+			});
+
+			src = parts[0];
+		}
+
+		var videoId   = extractVideoId(src),
+			playerUrl = generatePlayerURL(videoId, options),
+			width     = options.width  || PLAYER_WIDTH,
+			height    = options.height || PLAYER_HEIGHT,
+			format    = width/height;
+
+		var $iframe   = $("<iframe>")
+				.attr("src", playerUrl)
+				.attr("width", width)
+				.attr("height", height)
+				.attr("frameborder", 0)
+				.attr("allowfullscreen", "0")
+				.data("format", format),
+			$container = $("<div>")
+				.attr("class", "video-container"),
+			$embed = $("<div>")
+				.attr("class", "embed-responsive")
+			;
+
+		return $container.append($embed.append($iframe));
+
+}
+
+	if ($ && $.onScreen) $.onScreen.addPlugin("youtube", detectYoutubeSource, generatePlayer);
+
+})(window.jQuery || window.Zepto);
+
+/* VIMEO PLUGIN FOR jQuery onScreen
+  EXAMPLE
+  *	VIMEO URL :
+	http://vimeo.com/85970315
+  * GENERATED PLAYER
+	<div class="video-container">
+		<iframe src="//player.vimeo.com/video/85970315?title=0&amp;byline=0&amp;portrait=0&amp;loop=1;color=000000;"
+			class="vimeo-video" webkitallowfullscreen="" mozallowfullscreen="" allowfullscreen="" frameborder="0"
+			height="540" width="960"></iframe>
+	</div>
+*/
+(function($) {
+
+	// DEFAULT VALUES
+	var PLAYER_WIDTH = 640,
+		PLAYER_HEIGHT = 480;
+
+	/**
+	 * Detect a VIMEO URL
+	 */
+	function detectVimeoSource(src) {
+		return (src && src.indexOf("vimeo.com") !== -1);
+	}
+
+	function extractVideoId(vimeoUrl) {
+		return vimeoUrl.split("/").pop(); // extract last member
+	}
+
+	/**
+	 * This is the iframe source URL
+	 */
+	function generateVimeoPlayerURL(videoId, options) {
+		var params = [], url = "//player.vimeo.com/video/" + videoId;
+
+		// Hide the video title unles options.title=true
+		if (!options.title) params.push("title=0");
+		// Hide the 'Made By' line unless options.byline=true
+		if (!options.byline) params.push("byline=0");
+		// Hide the author's logo unless options.portrait=true
+		if (!options.portrait) params.push("portrait=0");
+		// choose the letters colors in the player's controls
+		if (options.color) params.push("color=" + options.color);
+
+		// Automatically launch video
+		if (options.autoplay) params.push("autoplay=1");
+
+		return [url, params.join("&")].join("?");
+	}
+
+	/**
+	 * Build the player for the requested vimeo URL
+	 */
+	function generateVimeoPlayer(src, options) {
+
+		options = options || {};
+
+		// extract params passed in the URL like : ?width=640&height=480
+		if (src.indexOf("?") !== -1) {
+
+			var parts = src.split("?"),
+				params = parts[1].split("&");
+
+			$.each(params, function(i, param) {
+				var pparts = param.split("=");
+				if (!options[pparts[0]]) options[pparts[0]] = pparts[1];
+			});
+
+			src = parts[0];
+		}
+
+		var videoId   = extractVideoId(src),
+			playerUrl = generateVimeoPlayerURL(videoId, options),
+			width     = options.width  || PLAYER_WIDTH,
+			height    = options.height || PLAYER_HEIGHT,
+			format    = width/height;
+
+		var $iframe   = $("<iframe>")
+				.attr("src", playerUrl)
+				.attr("width", width)
+				.attr("height", height)
+				.attr("frameborder", 0)
+				.attr("allowfullscreen", "0")
+				.data("format", format),
+			$container = $("<div>")
+				.attr("class", "video-container"),
+			$embed = $("<div>")
+				.attr("class", "embed-responsive")
+			;
+
+		return $container.append($embed.append($iframe));
+
+	}
+
+	if ($ && $.onScreen) $.onScreen.addPlugin("vimeo", detectVimeoSource, generateVimeoPlayer);
+
+})(window.jQuery || window.Zepto);
+
+ 
