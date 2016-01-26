@@ -2,12 +2,12 @@
 
 var buildify = require('buildify'),
 		less = require('less'),
-		version = "1.1.1",
+		version = "1.1.2",
 		buildDate = new Date;
 
 buildify("../js/")
 	.load('jquery.onscreen.js')
-	.concat(['jquery.onscreen.slideshow.js', 'jquery.onscreen.youtube.js', 'jquery.onscreen.vimeo.js'])
+	.concat(['jquery.onscreen.slideshow.js']) // , 'jquery.onscreen.youtube.js', 'jquery.onscreen.vimeo.js'])
 	.wrap('../build/template.js', { version: version, date: buildDate, year: buildDate.getFullYear() })
 	.changeDir('../dist/')
 	.save('jquery.onscreen-' + version + '.js')
