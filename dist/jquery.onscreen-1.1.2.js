@@ -1,5 +1,5 @@
 /**
- * $.onScreen - v1.1.2 - Tue Jan 26 2016 14:37:04 GMT+0100 (CET)
+ * $.onScreen - v1.1.2 - Wed Jan 27 2016 10:59:14 GMT+0100 (CET)
 
  * @author zipang (EIDOLON LABS)
  * @url http://github.com/zipang/onscreen
@@ -109,7 +109,6 @@
 		return function($fromSlide, $toSlide, speed, callback) {
 
 			// Prepare fadein
-			$toSlide.fadeOut(0);
 			$("*", $toSlide).show(); // FIX the slides with inner content not displaying
 
 			$fromSlide.fadeOut(speed);
@@ -193,7 +192,7 @@
 			if (!settings.useCSSTransitions && settings.newSlide) $newSlide.css(settings.newSlide);
 
 			$screen
-				.append($newSlide)
+				.prepend($newSlide)
 				// signal that this slide has been loaded
 				.trigger("loaded", [params, $newSlide]);
 
