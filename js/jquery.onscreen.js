@@ -1,9 +1,27 @@
 ;(function($, w, undefined) {
 
-	var $viewport = $(w),
-		$EMPTY_SLIDE = $();
+	var $viewport = $(w), doc = document,
+		docStyle = (doc.body || doc.documentElement).style,
+		$EMPTY_SLIDE = $(),
+		_DEFAULTS = { // Default settings values
+			screen: "#screen",       // That's the default ID of the screen when not passed
+			stretchMode: "crop",     // Should we occupy full screen width or fit into it?
+			centeredX: true,         // Should we center the image on the X axis?
+			centeredY: true,         // Should we center the image on the Y axis?
+			transitionSpeed: 1000,   // transition speed after image load (e.g. "fast" or 500)
+			transition: "fade",
+			newSlide: {opacity: 0},
+			useCSSTransitions: (     // Check support for CSS3 transitions
+				"WebkitTransition" in docStyle ||
+				"MozTransition" in docStyle ||
+				"OTransition" in docStyle ||
+				"transition" in docStyle
+			)
+		};
 
-	// Initialize the screen to project on
+	/**
+	 * @constructor Initialize the screen to project on
+	 */
 	function Screen(screen, params) {
 		var screenId = (typeof screen === "string" ? screen.replace(/^#/, "") : _DEFAULTS.screen),
 			$screen = $(screen || "#" + screenId);
@@ -30,18 +48,21 @@
 	 * Create the div.slide element that'll receive the image and content
 	 */
 	function Slide($bg, content, type) {
+		var $slide;
 
 		if ($bg) {
 			if (content) {
 				// insert image into a frame to superpose some content over
-				return $("<div>").addClass("slide").addClass(type).append($bg).append($(content));
+				$slide = $("<div>").append($bg).append($(content));
 
 			} else {
-				return $bg.addClass("slide").addClass(type).show();
+				$slide = $bg;
 			}
 		} else {
-			return $("<div>").addClass("slide").addClass(type).append($(content || ""));
+			return $("<div>").append($(content || ""));
 		}
+
+		return $slide.addClass("slide " + type);
 	}
 
 	if (!w.requestAnimationFrame) { // a dummy shim for our sole purpose
@@ -75,44 +96,19 @@
 
 		return function($fromSlide, $toSlide, speed, callback) {
 
-			$fromSlide.animate({opacity: 0}, speed);
+			// Prepare fadein
+			$("*", $toSlide).show(); // FIX the slides with inner content not displaying
 
-			$toSlide
-				.animate({opacity: 1}, {
-					duration: speed,
-					start: function() {
-						$toSlide.css("display", "block");
-					},
-					complete : function() {
-						$fromSlide.remove();
-						// Callback
-						if (typeof callback == "function") callback();
-						$screen.trigger(($toSlide === $EMPTY_SLIDE) ? "emptySlide" : "transitionEnd", $toSlide);
-					}
-				});
+			$fromSlide.fadeOut(speed);
+
+			$toSlide.fadeIn(speed, function() {
+				$fromSlide.remove();
+				// Callback
+				if (typeof callback == "function") callback();
+				$screen.trigger(($toSlide === $EMPTY_SLIDE) ? "emptySlide" : "transitionEnd", $toSlide);
+			});
 		}
 	}
-
-	// Support for CSS3 transitions detection
-	var doc = document,
-		docStyle = (doc.body || doc.documentElement).style;
-	$.support.transition = (
-		"WebkitTransition" in docStyle ||
-		"MozTransition" in docStyle ||
-		"OTransition" in docStyle ||
-		"transition" in docStyle
-	);
-
-	var _DEFAULTS = {
-		screen: "#screen",				 // That's the default ID of the screen when not passed
-		stretchMode: "crop",     // Should we occupy full screen width or fit into it?
-		centeredX: true,         // Should we center the image on the X axis?
-		centeredY: true,         // Should we center the image on the Y axis?
-		transitionSpeed: 1000,   // transition speed after image load (e.g. "fast" or 500)
-		useCSSTransitions: true,
-		transition: "fade"
-	};
-
 
 	/**
 	 * The only public method to call to project an image or a movie
@@ -149,7 +145,7 @@
 			return loaded.resolve(_DEFAULTS);;
 		}
 
-		$screen = new Screen(params.screen, params).show();
+		$screen = new Screen(params.screen, params);
 
 		// Adjust the projected image when window is resized or orientation has changed (iOS)
 		if (!$screen.data("monitored")) {
@@ -161,13 +157,13 @@
 		var settings = $screen.data("settings") || _DEFAULTS; // If this has been called once before, use the old settings as the default
 
 		$.extend(settings, params);
-		$screen.data("settings", settings);
 
-		if (settings.transition === "fade") { // default fade transition
-			settings.transition = (settings.useCSSTransitions && $.support.transition) ?
-				cssTransition($screen) : jsTransition($screen);
+		if (settings.transition === "fade") {
+			// init default fade transition
+			settings.transition = settings.useCSSTransitions ? cssTransition($screen) : jsTransition($screen);
 		}
 
+		$screen.data("settings", settings);
 
 		// Prepare to delete any old images
 		var $oldSlide = $screen.find(".slide"), $newSlide;
@@ -181,10 +177,11 @@
 
 			// Warning : the 'class' keyword is reserved and throws an Exception in IE7, 8..
 			if (settings["class"] || settings.className) $newSlide.addClass(settings["class"] || settings.className);
+			if (!settings.useCSSTransitions && settings.newSlide) $newSlide.css(settings.newSlide);
 
-			// signal that this slide has been loaded
 			$screen
-				.append($newSlide)
+				.prepend($newSlide)
+				// signal that this slide has been loaded
 				.trigger("loaded", [params, $newSlide]);
 
 			if ($oldSlide.length || $newSlide.length) {
@@ -200,16 +197,19 @@
 		} else if (mediaType === "image") {
 
 			if (typeof src === "string") {
-				var $imgLoader = $("<img>").css({
+				var $img = $("<img>").css({
 					display: "none",
 					zIndex: -999999,
 					width: "auto", height: "auto"
 				});
 
-				$imgLoader.on("load", function imageLoaded() {
+				$img.on("load", function imageLoaded() {
 
-					$imgLoader.data("format", $imgLoader.width() / $imgLoader.height()); // store the native image format when just loaded
-					$screen.data("image", $imgLoader);
+					$screen
+						.data("image", $img)
+						.append(// store the native image format when just loaded
+							$img.data("format", $img.width() / $img.height())
+						);
 
 					// warn that we have been loaded
 					loaded.resolve(adjustImage($screen)(), content);
@@ -218,7 +218,7 @@
 					$screen.data("image", undefined);
 					loaded.resolve(undefined, content);
 
-				}).appendTo($screen).attr("src", src);
+				}).attr("src", src);
 
 			} else { // <img> allready
 				$screen.data("image", src);
