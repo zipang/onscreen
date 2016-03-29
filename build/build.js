@@ -2,7 +2,7 @@
 
 var buildify = require('buildify'),
 		less = require('less'),
-		version = "1.1.2",
+		version = "1.1.3",
 		buildDate = new Date;
 
 buildify("../js/")

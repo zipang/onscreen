@@ -1,5 +1,5 @@
 /**
- * $.onScreen - v1.1.2 - Wed Jan 27 2016 10:59:14 GMT+0100 (CET)
+ * $.onScreen - v1.1.3 - Tue Mar 29 2016 11:45:42 GMT+0200 (CEST)
 
  * @author zipang (EIDOLON LABS)
  * @url http://github.com/zipang/onscreen
@@ -216,11 +216,12 @@
 				});
 
 				$img.on("load", function imageLoaded() {
+					var img = this;
 
 					$screen
 						.data("image", $img)
 						.append(// store the native image format when just loaded
-							$img.data("format", $img.width() / $img.height())
+							$img.data("format", (img.width / img.height) || (4 / 3))
 						);
 
 					// warn that we have been loaded

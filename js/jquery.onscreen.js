@@ -204,11 +204,12 @@
 				});
 
 				$img.on("load", function imageLoaded() {
+					var img = this;
 
 					$screen
 						.data("image", $img)
 						.append(// store the native image format when just loaded
-							$img.data("format", $img.width() / $img.height())
+							$img.data("format", (img.width / img.height) || (4 / 3))
 						);
 
 					// warn that we have been loaded
